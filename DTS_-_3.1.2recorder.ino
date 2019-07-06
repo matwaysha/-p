@@ -9,6 +9,7 @@ LiquidCrystal_PCF8574 lcd(0x27); //using displey for checking
 int n = 0;  //trims before flight
 int m = 0;
 int t = 0;
+int k = 0;  //counter for recorder
 int a = 90; //angles sending to servos
 int b = 90;
 int c = 90;
@@ -78,6 +79,21 @@ Serial.println("Card Ready");
               dataFilep.println("pitch angle");
               dataFilep.close();
             }
+            File dataFilev = SD.open("logelev.csv", FILE_WRITE); //making headlines
+            if (dataFilev){
+              dataFilev.println("elevator servo angle");
+              dataFilev.close();
+            }
+            File dataFilelail = SD.open("loglail.csv", FILE_WRITE);
+            if (dataFilelail){
+              dataFilelail.println("left aileron servo angle");
+              dataFilelail.close();
+            }
+            File dataFilerail = SD.open("lograil.csv", FILE_WRITE);
+            if (dataFilerail){
+              dataFilerail.println("right aileron servo angle");
+              dataFilerail.close();
+            }
   delay(1000);
 }
 
@@ -94,23 +110,22 @@ void loop() {
   bool Mnose = false;
   bool Mtail = false;
   bool Okpitch = true;
-  long timeStamp = millis();  //getting timestamp
   lcd.setBacklight(255);        //working witn lcd
   lcd.home(); lcd.clear();
   x = pulseIn(S1, HIGH);        //receiving angles
   x = 0.0978 * x - 53.0663 - 90;
   x = x * 10;
   x = x / 10;
-  delay(1);
+  //delay(1);
   y = pulseIn(S2, HIGH);
   y = 0.0977 * y - 52.8977 - 90;
   y = y * 10;
   y = y / 10;
-  lcd.setCursor(0, 1);      //printing angles
+  /*lcd.setCursor(0, 1);      //printing angles
   lcd.print(x);
   lcd.setCursor(8, 1);
   lcd.print(y);
-  lcd.setCursor(0, 0);
+  lcd.setCursor(0, 0);*/
   if ((y < -6) || (y > 6)) { //roll stabilazation
     Okroll = false;
     if ((y < -40) && (!so)) {
@@ -206,7 +221,7 @@ void loop() {
     c = 140 - t;
   }
   LailS.write(a + n); //sending commands to servos
-  RailS.write(a + m);
+  RailS.write(a + m); //this servo somewhy has reverse in real life
   ElevS.write(c + t);
   /*Serial.println(a);  //sending angles to the COM port
   Serial.print(" ");
@@ -214,9 +229,16 @@ void loop() {
   Serial.print(" ");
   Serial.print(c);
   Serial.print(" ");*/
+  k++;
+  if(k == 20){
+    k = 0;
+    long timeStamp = millis(); //getting timestamp
+  String str3 = String(a + n); //converting int to string, cause only string can be written to the file
+  String str4 = String(b + m);
+  String str5 = String(c + t);
   String str1 = String(x);
-            String str2 = String(y); //writing angles and timestamp to the files
-      File dataFilet = SD.open("logt.csv", FILE_WRITE);
+            String str2 = String(y);
+      File dataFilet = SD.open("logt.csv", FILE_WRITE);//writing angles and timestamp to the files
             if (dataFilet){
               dataFilet.println(timeStamp);
               dataFilet.close();
@@ -230,7 +252,23 @@ void loop() {
             if (dataFilep){
               dataFilep.println(str2);
               dataFilep.close();
+            }
+            File dataFilev = SD.open("logelev.csv", FILE_WRITE); //writing servo's angles
+            if (dataFilev){
+              dataFilev.println(str5);
+              dataFilev.close();
+            }
+            File dataFilelail = SD.open("loglail.csv", FILE_WRITE);
+            if (dataFilelail){
+              dataFilelail.println(str3);
+              dataFilelail.close();
+            }
+            File dataFilerail = SD.open("lograil.csv", FILE_WRITE);
+            if (dataFilerail){
+              dataFilerail.println(str4);
+              dataFilerail.close();
             }     
-  delay(10);
-
+  
+  }
+  delay(7);
 }
